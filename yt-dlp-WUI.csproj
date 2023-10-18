@@ -25,6 +25,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="releases\" />
+  </ItemGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy  &quot;$(ProjectDir)source&quot;  &quot;$(ProjectDir)$(OutDir)&quot; /s /e /h /d" />
   </Target>
