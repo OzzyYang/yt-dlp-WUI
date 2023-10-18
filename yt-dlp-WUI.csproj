@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <RootNamespace>yt_dlp_WUI</RootNamespace>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <Version>0.1-alpha</Version>
+    <Authors>Ozzy</Authors>
+    <PackageIcon>icon.png</PackageIcon>
+    <ApplicationIcon>icon\icon.ico</ApplicationIcon>
+    <Company>Ozzy</Company>
+    <Description>Windows UI of yt-dlp.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="icon\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="icon\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy  &quot;$(ProjectDir)source&quot;  &quot;$(ProjectDir)$(OutDir)&quot; /s /e /h /d" />
+  </Target>
+
+</Project>
