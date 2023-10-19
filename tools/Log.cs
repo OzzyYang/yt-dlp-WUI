@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.IO;
 
 namespace yt_dlp_WUI.tools
 {
@@ -16,18 +17,17 @@ namespace yt_dlp_WUI.tools
 
 		public MyLog(TextBox output)
 		{
-			this.output = output;	
+			this.output = output;
 			appendLog("The status will show here.");
 		}
 
 		public String appendLog(String content)
 		{
-			
-			allLogs.Append(DateTime.Now+": "+content+"\n");
+			cleanLogs();
+			allLogs.Append(DateTime.Now + ": " + content + "\n");
 			output.Text = allLogs.ToString();
 			output.ScrollToEnd();
 			return allLogs.ToString();
-
 		}
 
 		public String getCurrentLogs()
@@ -35,6 +35,22 @@ namespace yt_dlp_WUI.tools
 			return allLogs.ToString();
 		}
 
+		private void cleanLogs()
+		{
+			if (allLogs.Length > 5000)
+			{
+				appendAll();
+			}
+		}
+
+		public void appendAll()
+		{
+			using (StreamWriter sw = new StreamWriter("Logs.txt", true))
+			{
+				sw.Write(allLogs.ToString());
+			}
+			allLogs.Clear();
+		}
 
 	}
 }

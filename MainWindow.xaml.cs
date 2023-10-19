@@ -16,6 +16,11 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using yt_dlp_WUI.tools;
+using CliWrap;
+using CliWrap.Buffered;
+using System.CodeDom.Compiler;
+using CliWrap.EventStream;
+using System.Text.RegularExpressions;
 
 namespace yt_dlp_UI
 {
@@ -25,26 +30,94 @@ namespace yt_dlp_UI
 	public partial class MainWindow : Window
 	{
 		string path = "D:\\Videos\\Youtube";
-		MyLog myLog; 
-		
+		bool isTestFlag = false;
+		MyLog myLog;
+		StringBuilder stdOutBuffer = new StringBuilder();
+		StringBuilder stdErrBuffer = new StringBuilder();
 		public MainWindow()
 		{
 			InitializeComponent();
 			myLog = new MyLog(messageBox);
-		}
-
-		private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
-		{
-
+			dlProgressBar.Value = 0;
 		}
 
 
 		private void download(object sender, RoutedEventArgs e)
 		{
+			dlProgressBar.Value = 0;
 			myLog.appendLog("The task is running ... ");
-			myLog.appendLog(downloadNow(addressBox.Text));
+			downloadNowNew(addressBox.Text);
 		}
 
+		private async void downloadNowNew(string downloadUrl)
+		{
+			try
+			{
+				var results = Cli.Wrap("./yt-dlp/yt-dlp.exe")
+					.WithArguments(downloadUrl)
+					.WithEnvironmentVariables(new Dictionary<string, string?>
+					{
+						["Path"] = "./ffmpeg/bin"
+					});
+				//.WithStandardOutputPipe(PipeTarget.ToStringBuilder(stdOutBuffer))
+				//.WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
+				//.ExecuteBufferedAsync();
+
+				await foreach (var result in results.ListenAsync())
+				{
+					switch (result)
+					{
+						case StartedCommandEvent started:
+							{
+								myLog.appendLog("Process started. PID " + started.ProcessId);
+								break;
+							}
+						case StandardOutputCommandEvent stdOut:
+							{
+								myLog.appendLog("OUT> " + stdOut.Text);
+								cacProgressBar(stdOut.Text);
+								break;
+							}
+						case StandardErrorCommandEvent stdErr:
+							{
+								myLog.appendLog(stdErr.Text);
+								break;
+							}
+						case ExitedCommandEvent exited:
+							{
+								myLog.appendLog("Process exited. Code: " + exited.ExitCode);
+								dlProgressBar.Value = 100;
+								break;
+							}
+					}
+				}
+
+			}
+			catch (Exception ex)
+			{
+				myLog.appendLog(ex.Message);
+			}
+			finally
+			{
+				//myLog.appendLog($"{stdOutBuffer.ToString()}");
+				//myLog.appendLog($"{stdErrBuffer.ToString()}");
+
+			}
+			//myLog.appendLog("Download task finished.");
+		}
+		private void cacProgressBar(string text)
+		{
+			if (String.IsNullOrEmpty(text)) return;
+			if (text.Contains("Downloading subtitles")) dlProgressBar.Value = 20;
+			if (text.Contains("Writing video subtitles")) dlProgressBar.Value = 60;
+			if (text.Contains("Converting subtitles")) dlProgressBar.Value = 100;
+			if (text.Contains("ETA"))
+			{
+				Match match = Regex.Match(text, @"\d+\.\d+%");
+				if (match.Success) dlProgressBar.Value = Double.Parse(match.Value.Remove(match.Value.Length-1));
+			}
+			if (text.Contains("Merging formats into")) dlProgressBar.Value = 0;
+		}
 
 		private string downloadNow(string downloadUrl)
 		{
@@ -53,7 +126,7 @@ namespace yt_dlp_UI
 			{
 				downloader.StartInfo.UseShellExecute = false;
 				downloader.StartInfo.FileName = "./yt-dlp/yt-dlp.exe";
-				downloader.StartInfo.CreateNoWindow = true;
+				downloader.StartInfo.CreateNoWindow = !isTestFlag;
 				downloader.StartInfo.Arguments = downloadUrl;
 				downloader.StartInfo.RedirectStandardOutput = true;
 				downloader.StartInfo.EnvironmentVariables["Path"] = "./ffmpeg/bin";
@@ -97,14 +170,20 @@ namespace yt_dlp_UI
 
 		}
 
-		private void CheckBox_Checked(object sender, RoutedEventArgs e)
+		private void isTest(object sender, RoutedEventArgs e)
+		{
+			isTestFlag = isTestFlag ? false : true;
+			addressBox.Text = isTestFlag ? "https://www.youtube.com/watch?v=nZNPgC0eyHk" : "";
+		}
+
+		private void testButton_Click(object sender, RoutedEventArgs e)
 		{
 
 		}
 
-		private void isTest(object sender, RoutedEventArgs e)
+		private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
-			addressBox.Text = "https://www.youtube.com/watch?v=nZNPgC0eyHk";
+			myLog.appendAll();
 		}
 	}
 }
