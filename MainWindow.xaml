@@ -27,7 +27,7 @@
         </Grid.RowDefinitions>
         <Label Content="Address:" Margin="10,10,94,0" VerticalAlignment="Top" Height="37" FontSize="22" Grid.Column="1" Grid.Row="1"/>
         <TextBox x:Name="addressBox" Margin="123,10,20,10" Text="Input your address here." TextChanged="TextBox_TextChanged" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="5"/>
-        <TextBox x:Name="messageBox" Text="The status will show here." TextChanged="TextBox_TextChanged" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" IsReadOnly="True" Grid.Column="1" Grid.Row="3" Grid.ColumnSpan="5" Margin="122,10,19,10"/>
+        <TextBox x:Name="messageBox" TextChanged="TextBox_TextChanged" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Grid.Column="1" Grid.Row="3" Grid.ColumnSpan="5" Margin="122,10,19,10" />
         <Label Content="Output:" Margin="22,10,82,0" VerticalAlignment="Top" Height="37" FontSize="22" Grid.Column="1" Grid.Row="3"/>
         <Button x:Name="downloadButton" Content="Download" Margin="0,43,0,43" Width="200" Click="download" FontSize="20" Grid.Column="3" HorizontalAlignment="Center" Grid.Row="5"/>
         <Button x:Name="initiateButton" Content="Initiate" Margin="5,43,0,43" Width="200" Click="initiate" FontSize="20" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="5"/>

@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using yt_dlp_WUI.tools;
 
 namespace yt_dlp_UI
 {
@@ -24,9 +25,12 @@ namespace yt_dlp_UI
 	public partial class MainWindow : Window
 	{
 		string path = "D:\\Videos\\Youtube";
+		MyLog myLog; 
+		
 		public MainWindow()
 		{
 			InitializeComponent();
+			myLog = new MyLog(messageBox);
 		}
 
 		private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -37,9 +41,8 @@ namespace yt_dlp_UI
 
 		private void download(object sender, RoutedEventArgs e)
 		{
-			messageBox.Text = "The task is running ... ";
-			messageBox.Text = downloadNow(addressBox.Text);
-			messageBox.ScrollToEnd();
+			myLog.appendLog("The task is running ... ");
+			myLog.appendLog(downloadNow(addressBox.Text));
 		}
 
 
@@ -66,14 +69,12 @@ namespace yt_dlp_UI
 
 		private void openFolder(object sender, RoutedEventArgs e)
 		{
-			messageBox.Text = "Go and check your videos.";
+			myLog.appendLog("Go and check your videos at " + path + ".");
 			Process.Start("explorer.exe", path);
 		}
 
 		private void initiate(object sender, RoutedEventArgs e)
 		{
-			messageBox.Text = "Initiation done.";
-
 			try
 			{
 				// Determine whether the directory exists.
@@ -81,11 +82,16 @@ namespace yt_dlp_UI
 				{
 					// Create the directory it does not exist.
 					Directory.CreateDirectory(path);
+					myLog.appendLog("The directory has been set up");
 				}
 			}
 			catch (Exception ex)
 			{
-				messageBox.Text = "The process failed: {0}" + ex.ToString();
+				myLog.appendLog("The process failed: {0}" + ex.ToString());
+			}
+			finally
+			{
+				myLog.appendLog("Initiation done.");
 			}
 
 
