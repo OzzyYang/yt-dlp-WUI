@@ -34,6 +34,7 @@ namespace yt_dlp_UI
 		MyLog myLog;
 		StringBuilder stdOutBuffer = new StringBuilder();
 		StringBuilder stdErrBuffer = new StringBuilder();
+		String tipContent = "Waiting ... ";
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -45,6 +46,9 @@ namespace yt_dlp_UI
 		private void download(object sender, RoutedEventArgs e)
 		{
 			dlProgressBar.Value = 0;
+			downloadButton.Visibility = Visibility.Hidden;
+			tipBox.Text = "Waiting ... ;";
+			initiateButton.IsEnabled = false;
 			myLog.appendLog("The task is running ... ");
 			downloadNowNew(addressBox.Text);
 		}
@@ -59,9 +63,6 @@ namespace yt_dlp_UI
 					{
 						["Path"] = "./ffmpeg/bin"
 					});
-				//.WithStandardOutputPipe(PipeTarget.ToStringBuilder(stdOutBuffer))
-				//.WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
-				//.ExecuteBufferedAsync();
 
 				await foreach (var result in results.ListenAsync())
 				{
@@ -70,11 +71,11 @@ namespace yt_dlp_UI
 						case StartedCommandEvent started:
 							{
 								myLog.appendLog("Process started. PID " + started.ProcessId);
+								tipBox.Text = "Starting ... ";
 								break;
 							}
 						case StandardOutputCommandEvent stdOut:
 							{
-								myLog.appendLog("OUT> " + stdOut.Text);
 								cacProgressBar(stdOut.Text);
 								break;
 							}
@@ -86,7 +87,8 @@ namespace yt_dlp_UI
 						case ExitedCommandEvent exited:
 							{
 								myLog.appendLog("Process exited. Code: " + exited.ExitCode);
-								dlProgressBar.Value = 100;
+								//dlProgressBar.Value = 100;
+
 								break;
 							}
 					}
@@ -101,22 +103,46 @@ namespace yt_dlp_UI
 			{
 				//myLog.appendLog($"{stdOutBuffer.ToString()}");
 				//myLog.appendLog($"{stdErrBuffer.ToString()}");
+				tipBox.Text = "";
+
+				initiateButton.IsEnabled = true;
+				downloadButton.Visibility = Visibility.Visible;
 
 			}
 			//myLog.appendLog("Download task finished.");
 		}
 		private void cacProgressBar(string text)
 		{
+			string stdOutText = text;
 			if (String.IsNullOrEmpty(text)) return;
-			if (text.Contains("Downloading subtitles")) dlProgressBar.Value = 20;
-			if (text.Contains("Writing video subtitles")) dlProgressBar.Value = 60;
-			if (text.Contains("Converting subtitles")) dlProgressBar.Value = 100;
+			if (text.Contains("Downloading subtitles"))
+			{
+				dlProgressBar.Value = 20;
+				tipBox.Text = "Downloading subtitles ... 1/3";
+
+			}
+			if (text.Contains("Writing video subtitles")) { dlProgressBar.Value = 60; }
+			if (text.Contains("Converting subtitles"))
+			{
+				dlProgressBar.Value = 80;
+				tipBox.Text = "Downloading medias ... 2/3";
+
+			}
 			if (text.Contains("ETA"))
 			{
 				Match match = Regex.Match(text, @"\d+\.\d+%");
-				if (match.Success) dlProgressBar.Value = Double.Parse(match.Value.Remove(match.Value.Length-1));
+				if (match.Success) dlProgressBar.Value = Double.Parse(match.Value.Remove(match.Value.Length - 1));
+				stdOutText = String.Empty;
 			}
-			if (text.Contains("Merging formats into")) dlProgressBar.Value = 0;
+			if (text.Contains("Merging formats into"))
+			{
+				dlProgressBar.Value = 0;
+				tipBox.Text = " Merging formats ... 3/3";
+
+			}
+			if (text.Contains("Deleting original file")) { dlProgressBar.Value = 100; }
+
+			if (!String.IsNullOrEmpty(stdOutText)) myLog.appendLog("OUT> " + stdOutText);
 		}
 
 		private string downloadNow(string downloadUrl)
@@ -184,6 +210,11 @@ namespace yt_dlp_UI
 		private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 			myLog.appendAll();
+		}
+
+		private void dlProgressBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+		{
+
 		}
 	}
 }
